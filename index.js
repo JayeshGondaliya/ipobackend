@@ -4,6 +4,7 @@ import cors from "cors";
 
 import { connectDB } from "./src/config/database.js";
 import ipoRoutes from "./src/routes/ipoRoutes.js";
+import contactRoutes from "./src/routes/contactRoutes.js";
 import { errorHandler } from "./src/middleware/errorHandler.js";
 
 const app = express();
@@ -31,6 +32,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/ipo", ipoRoutes);
+app.use("/api/contact", contactRoutes);
 
 app.use(errorHandler);
 
