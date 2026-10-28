@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 
+import { connectDB } from "./src/config/database.js";
 import ipoRoutes from "./src/routes/ipoRoutes.js";
 import { errorHandler } from "./src/middleware/errorHandler.js";
 
@@ -15,7 +16,6 @@ app.use(
   })
 );
 
-// Home route
 app.get("/", (req, res) => {
   res.json({
     success: true,
@@ -23,14 +23,30 @@ app.get("/", (req, res) => {
   });
 });
 
-// IPO routes
+app.get("/health", (req, res) => {
+  res.json({
+    success: true,
+    message: "Backend is healthy",
+  });
+});
+
 app.use("/api/ipo", ipoRoutes);
 
-// Error handler must come after routes
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+async function startServer() {
+  try {
+    await connectDB();
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Server startup failed:", error.message);
+    process.exit(1);
+  }
+}
+
+startServer();

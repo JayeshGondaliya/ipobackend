@@ -74,3 +74,4 @@ export async function getGmpBySlug(req, res, next) {
     next(error);
   }
 }
+

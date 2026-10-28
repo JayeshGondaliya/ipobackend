@@ -1,44 +1,70 @@
 import ipoGuru from "../config/ipoGuru.js";
-import { getCachedData } from "../utils/cache.js";
+import { getCachedData } from "./cacheService.js";
+import { reserveApiRequest } from "../utils/rateLimiter.js";
 
-// Check API key, plan and quota
-export async function getAccountInfo() {
-  const response = await ipoGuru.get("/me");
-  return response.data;
+const TTL = {
+  ACCOUNT: 6 * 60 * 60 * 1000, // 6 hours
+  IPO_LIST: 2 * 60 * 60 * 1000, // 2 hours
+  IPO_DETAILS: 6 * 60 * 60 * 1000, // 6 hours
+  GMP: 15 * 60 * 1000, // 15 minutes
+};
+
+async function callIpoGuru(url, config = {}) {
+  // Reserve a quota slot before making the provider request.
+  await reserveApiRequest();
+
+  const response = await ipoGuru.get(url, config);
+
+  // IPO Guru supplies the real remaining quota in response headers.
+  const remaining = response.headers["x-ratelimit-remaining"];
+
+  if (remaining !== undefined) {
+    console.log(`IPO Guru requests remaining today: ${remaining}`);
+  }
+
+  return response;
 }
 
-// Get IPO list
+// GET /me
+export async function getAccountInfo() {
+  return getCachedData("account:me", TTL.ACCOUNT, () =>
+    callIpoGuru("/me")
+  );
+}
+
+// GET /ipos
 export async function getIpos(params = {}) {
   const cacheKey = `ipos:${JSON.stringify(params)}`;
 
-  return getCachedData(cacheKey, () =>
-    ipoGuru.get("/ipos", { params })
+  return getCachedData(cacheKey, TTL.IPO_LIST, () =>
+    callIpoGuru("/ipos", { params })
   );
 }
 
-// Get GMP for multiple IPOs
+// GET /gmp
+// One request returns GMP for multiple live IPOs.
 export async function getGmp(params = {}) {
   const cacheKey = `gmp:${JSON.stringify(params)}`;
 
-  return getCachedData(cacheKey, () =>
-    ipoGuru.get("/gmp", { params })
+  return getCachedData(cacheKey, TTL.GMP, () =>
+    callIpoGuru("/gmp", { params })
   );
 }
 
-// Get details of one IPO
+// GET /ipos/:slug
 export async function getIpoBySlug(slug) {
   const cacheKey = `ipo:${slug}`;
 
-  return getCachedData(cacheKey, () =>
-    ipoGuru.get(`/ipos/${encodeURIComponent(slug)}`)
+  return getCachedData(cacheKey, TTL.IPO_DETAILS, () =>
+    callIpoGuru(`/ipos/${encodeURIComponent(slug)}`)
   );
 }
 
-// Get GMP of one IPO
+// GET /ipos/:slug/gmp
 export async function getGmpBySlug(slug) {
   const cacheKey = `ipo-gmp:${slug}`;
 
-  return getCachedData(cacheKey, () =>
-    ipoGuru.get(`/ipos/${encodeURIComponent(slug)}/gmp`)
+  return getCachedData(cacheKey, TTL.GMP, () =>
+    callIpoGuru(`/ipos/${encodeURIComponent(slug)}/gmp`)
   );
 }
