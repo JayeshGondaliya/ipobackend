@@ -8,7 +8,7 @@ import {
 const router = express.Router();
 
 // Submit contact form
-router.post("/", submitContactMessage);
+router.post("/sendContact", submitContactMessage);
 
 // Get all contact messages
 router.get("/getContact", getAllContactMessages);
