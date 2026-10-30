@@ -15,6 +15,7 @@ app.use(cors({
         "http://localhost:5173",
         "https://ipogmpp.in",
         "https://www.ipogmpp.in"
+     
     ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
