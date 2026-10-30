@@ -70,3 +70,23 @@ export async function submitContactMessage(req, res) {
     });
   }
 }
+
+// Get all contact messages
+export async function getAllContactMessages(req, res) {
+  try {
+    const contacts = await ContactMessage.find().sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: contacts.length,
+      contacts,
+    });
+  } catch (error) {
+    console.error("Failed to fetch contact messages:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch contact messages.",
+    });
+  }
+}
