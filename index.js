@@ -10,15 +10,14 @@ import { errorHandler } from "./src/middleware/errorHandler.js";
 const app = express();
 
 app.use(express.json());
-app.use(
-  cors({
+app.use(cors({
     origin: [
-      "https://www.ipogmpp.in",
-      "https://ipogmpp.in",
+        "http://localhost:5173",
+        "https://your-frontend-domain.com"
     ],
-    methods: ["GET", "POST"],
-  })
-);
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
 app.get("/", (req, res) => {
   res.json({
